@@ -99,7 +99,25 @@ convert_file([[_|_]|_]=Filenames, Report, S) ->
                        fun(Filename) -> ok = import(S, Filename) end,
                        Filenames),
   ConvertedModules = convert_modules(S),
-  jsx:encode(Report#{source_files => ConvertedModules}, []).
+  JsonModules = get_jsonfile(),
+  jsx:encode(Report#{source_files => ConvertedModules ++ JsonModules}, []).
+
+get_jsonfile() ->
+    case os:getenv("ADDJSONFILE") of
+        false -> [];
+        JsonFilename -> get_jsonfile(JsonFilename)
+    end.
+
+get_jsonfile(JsonFilename) ->
+    [Elements] = jsx:consult(JsonFilename),
+    SourceFiles = proplists:get_value(<<"source_files">>, Elements),
+    lists:map(fun(SF) ->
+                      #{name => proplists:get_value(<<"name">>, SF),
+                        source_digest => proplists:get_value(<<"source_digest">>, SF),
+                        coverage => proplists:get_value(<<"coverage">>, SF)
+                       }
+              end,
+              SourceFiles).
 
 convert_and_send_file(Filenames, Report, S) ->
   send(convert_file(Filenames, Report, S), S).
