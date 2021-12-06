@@ -170,7 +170,7 @@ collect_git_info(Report) ->
 
 collect_git_details(Id) ->
   {ok, Details} = rebar_utils:sh("git show -s --pretty=format:'%aN%n%aE%n%cN%n%cE%n%s'", []),
-  Info = re:split(Details, "\n", [{return, binary}]),
+  Info = re:split(Details, "\n", [unicode, {return, binary}]),
   Head = maps:from_list(
            lists:zip(
              ['author_name', 'author_email', 'committer_name', 'committer_email', 'message'], Info)),
